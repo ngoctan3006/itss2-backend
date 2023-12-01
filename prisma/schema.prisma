@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int        @id @default(autoincrement())
+  username    String     @unique
+  password    String
+  avatar      String?
+  role        Role       @default(USER)
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+  room        Room[]
+  review      Review[]
+  owner_chat  RoomChat[] @relation("owner")
+  renter_chat RoomChat[] @relation("renter")
+  message     Message[]
+}
+
+model Room {
+  id                 Int            @id @default(autoincrement())
+  owner_id           Int
+  owner              User           @relation(fields: [owner_id], references: [id])
+  name               String         @unique
+  address            String
+  type               RoomType
+  area               Float
+  distance_to_school Float
+  price              Int
+  created_at         DateTime       @default(now())
+  updated_at         DateTime       @updatedAt
+  room_attribute     RoomAttribute?
+  room_image         RoomImage[]
+  review             Review[]
+}
+
+model RoomAttribute {
+  id               Int      @id @default(autoincrement())
+  room_id          Int      @unique
+  room             Room     @relation(fields: [room_id], references: [id])
+  wifi_internet    Boolean  @default(false)
+  air_conditioner  Boolean  @default(false)
+  water_heater     Boolean  @default(false)
+  refrigerator     Boolean  @default(false)
+  washing_machine  Boolean  @default(false)
+  enclosed_toilet  Boolean  @default(false)
+  safed_device     Boolean  @default(false)
+  electronic_price Float
+  water_price      Float
+  description      String
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+}
+
+model RoomImage {
+  id         Int      @id @default(autoincrement())
+  room_id    Int
+  room       Room     @relation(fields: [room_id], references: [id])
+  image_url  String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Review {
+  id           Int           @id @default(autoincrement())
+  room_id      Int
+  room         Room          @relation(fields: [room_id], references: [id])
+  user_id      Int
+  user         User          @relation(fields: [user_id], references: [id])
+  content      String
+  star         Int
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+  review_image ReviewImage[]
+}
+
+model ReviewImage {
+  id         Int      @id @default(autoincrement())
+  review_id  Int
+  review     Review   @relation(fields: [review_id], references: [id])
+  image_url  String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model RoomChat {
+  id         Int       @id @default(autoincrement())
+  name       String
+  owner_id   Int
+  owner      User      @relation(fields: [owner_id], references: [id], name: "owner")
+  renter_id  Int
+  renter     User      @relation(fields: [renter_id], references: [id], name: "renter")
+  content    String
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  message    Message[]
+}
+
+model Message {
+  id            Int            @id @default(autoincrement())
+  room_chat_id  Int
+  room_chat     RoomChat       @relation(fields: [room_chat_id], references: [id])
+  sender_id     Int
+  sender        User           @relation(fields: [sender_id], references: [id])
+  content       String
+  sended_at     DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  message_image MessageImage[]
+}
+
+model MessageImage {
+  id         Int      @id @default(autoincrement())
+  message_id Int
+  message    Message  @relation(fields: [message_id], references: [id])
+  image_url  String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+enum Role {
+  USER
+  OWNER
+}
+
+enum RoomType {
+  CHUNG_CU_MINI
+  PHONG_TRO
+  HOME_STAY
+}
