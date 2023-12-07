@@ -18,11 +18,7 @@ import { RoomService } from './room.service';
 export class RoomController {
   constructor(private readonly roomService: RoomService) {}
 
-  @ApiConsumes(
-    'application/x-www-form-urlencoded',
-    'multipart/form-data',
-    'application/json',
-  )
+  @ApiConsumes('multipart/form-data')
   @Post()
   async create(@Body() data: CreateRoomDto): Promise<IResponse<Room>> {
     return {
