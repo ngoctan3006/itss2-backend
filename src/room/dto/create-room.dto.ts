@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { RoomType } from '@prisma/client';
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
 
 export class CreateRoomDto {
   @ApiProperty({ description: 'Owner id' })
-  @Transform(({ value }) => Number(value))
+  @Transform(({ value }) => parseInt(value))
   @IsNotEmpty()
-  @IsNumber()
+  @IsInt()
   @Min(1)
   owner_id: number;
 
