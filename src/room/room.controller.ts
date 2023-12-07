@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Room } from '@prisma/client';
 import { IQuery, IResponse } from 'src/common/dtos';
@@ -36,6 +36,15 @@ export class RoomController {
       message: 'Get rooms successfully',
       data: await this.roomService.findAll(params),
       pagination: await this.roomService.getPagination(params, 'address'),
+    };
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: number): Promise<IResponse<Room>> {
+    return {
+      success: true,
+      message: 'Get room successfully',
+      data: await this.roomService.findOne(id),
     };
   }
 }

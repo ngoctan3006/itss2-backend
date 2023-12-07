@@ -42,4 +42,8 @@ export class RoomService {
       take: page_size,
     });
   }
+
+  async findOne(id: number): Promise<Room> {
+    return this.prisma.room.findUnique({ where: { id } });
+  }
 }
