@@ -10,10 +10,15 @@ import {
   IsString,
   Min,
 } from 'class-validator';
+import {
+  transformToInteger,
+  transformToNumber,
+  transfromToBoolean,
+} from 'src/utils';
 
 export class CreateRoomDto {
   @ApiProperty({ description: 'Owner id' })
-  @Transform(({ value }) => parseInt(value))
+  @Transform(transformToInteger)
   @IsNotEmpty()
   @IsInt()
   @Min(1)
@@ -39,35 +44,35 @@ export class CreateRoomDto {
   type: RoomType;
 
   @ApiProperty({ description: 'Room area in m2' })
-  @Transform(({ value }) => Number(value))
+  @Transform(transformToNumber)
   @IsNotEmpty()
   @IsNumber()
   @Min(0)
   area: number;
 
   @ApiProperty({ description: 'Distance to school in km' })
-  @Transform(({ value }) => Number(value))
+  @Transform(transformToNumber)
   @IsNotEmpty()
   @IsNumber()
   @Min(0)
   distance_to_school: number;
 
   @ApiProperty({ description: 'Room price in VND' })
-  @Transform(({ value }) => Number(value))
+  @Transform(transformToNumber)
   @IsNotEmpty()
   @IsNumber()
   @Min(0)
   price: number;
 
   @ApiProperty({ description: 'Price of electricity in VND' })
-  @Transform(({ value }) => Number(value))
+  @Transform(transformToNumber)
   @IsNotEmpty()
   @IsNumber()
   @Min(0)
   electronic_price: number;
 
   @ApiProperty({ description: 'Price of water in VND' })
-  @Transform(({ value }) => Number(value))
+  @Transform(transformToNumber)
   @IsNotEmpty()
   @IsNumber()
   @Min(0)
@@ -84,7 +89,7 @@ export class CreateRoomDto {
     required: false,
     description: 'Has wifi?',
   })
-  @Transform(({ value }) => Boolean(value))
+  @Transform(transfromToBoolean)
   @IsOptional()
   @IsBoolean()
   wifi_internet: boolean;
@@ -95,7 +100,7 @@ export class CreateRoomDto {
     required: false,
     description: 'Has air conditioner?',
   })
-  @Transform(({ value }) => Boolean(value))
+  @Transform(transfromToBoolean)
   @IsOptional()
   @IsBoolean()
   air_conditioner: boolean;
@@ -106,7 +111,7 @@ export class CreateRoomDto {
     required: false,
     description: 'Has water heater?',
   })
-  @Transform(({ value }) => Boolean(value))
+  @Transform(transfromToBoolean)
   @IsOptional()
   @IsBoolean()
   water_heater: boolean;
@@ -117,7 +122,7 @@ export class CreateRoomDto {
     required: false,
     description: 'Has refrigerator?',
   })
-  @Transform(({ value }) => Boolean(value))
+  @Transform(transfromToBoolean)
   @IsOptional()
   @IsBoolean()
   refrigerator: boolean;
@@ -128,7 +133,7 @@ export class CreateRoomDto {
     required: false,
     description: 'Has washing machine?',
   })
-  @Transform(({ value }) => Boolean(value))
+  @Transform(transfromToBoolean)
   @IsOptional()
   @IsBoolean()
   washing_machine: boolean;
@@ -139,7 +144,7 @@ export class CreateRoomDto {
     required: false,
     description: 'Has enclosed toilet?',
   })
-  @Transform(({ value }) => Boolean(value))
+  @Transform(transfromToBoolean)
   @IsOptional()
   @IsBoolean()
   enclosed_toilet: boolean;
@@ -150,7 +155,7 @@ export class CreateRoomDto {
     required: false,
     description: 'Has safed device?',
   })
-  @Transform(({ value }) => Boolean(value))
+  @Transform(transfromToBoolean)
   @IsOptional()
   @IsBoolean()
   safed_device: boolean;
