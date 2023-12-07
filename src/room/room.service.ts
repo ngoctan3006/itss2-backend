@@ -26,7 +26,43 @@ export class RoomService {
   }
 
   async create(data: CreateRoomDto): Promise<Room> {
-    return this.prisma.room.create({ data });
+    const {
+      owner_id,
+      name,
+      address,
+      type,
+      area,
+      distance_to_school,
+      price,
+      ...attribute
+    } = data;
+    return this.prisma.$transaction(async (prisma) => {
+      const room = await prisma.room.create({
+        data: {
+          owner_id,
+          name,
+          address,
+          type,
+          area,
+          distance_to_school,
+          price,
+        },
+      });
+      const roomAttribute = await prisma.roomAttribute.create({
+        data: {
+          room_id: room.id,
+          ...attribute,
+        },
+      });
+      delete roomAttribute.id;
+      delete roomAttribute.room_id;
+      delete roomAttribute.created_at;
+      delete roomAttribute.updated_at;
+      return {
+        ...room,
+        ...roomAttribute,
+      };
+    });
   }
 
   async findAll(params: IQuery): Promise<Room[]> {
