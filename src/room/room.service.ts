@@ -103,7 +103,7 @@ export class RoomService {
   }
 
   async findAll(params: IQuery): Promise<Room[]> {
-    const { page, page_size, search } = params;
+    const { page, page_size, search, order_direction } = params;
     return this.prisma.room.findMany({
       where: {
         address: {
@@ -113,6 +113,9 @@ export class RoomService {
       },
       skip: (page - 1) * page_size,
       take: page_size,
+      orderBy: {
+        updated_at: order_direction,
+      },
       include: {
         owner: {
           select: {
