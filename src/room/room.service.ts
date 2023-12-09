@@ -57,7 +57,7 @@ export class RoomService {
             price,
           },
         });
-        const roomAttribute = await prisma.roomAttribute.create({
+        const room_attribute = await prisma.roomAttribute.create({
           data: {
             room_id: room.id,
             ...attribute,
@@ -75,15 +75,13 @@ export class RoomService {
               image_url: url,
             },
           });
+          delete uploaded.room_id;
           room_image.push(uploaded);
         }
-        delete roomAttribute.id;
-        delete roomAttribute.room_id;
-        delete roomAttribute.created_at;
-        delete roomAttribute.updated_at;
+        delete room_attribute.room_id;
         return {
           ...room,
-          ...roomAttribute,
+          room_attribute,
           room_image,
         };
       });
