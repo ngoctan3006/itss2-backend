@@ -21,11 +21,6 @@ export class IQuery {
   @IsInt()
   page_size: number = 10;
 
-  @ApiProperty({ description: 'Search keyword', default: '', required: false })
-  @IsOptional()
-  @IsString()
-  search: string = '';
-
   @ApiProperty({
     description: 'Order by updated_at direction',
     enum: OrderDirection,
