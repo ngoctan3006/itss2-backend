@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseFilePipeBuilder,
@@ -127,6 +128,22 @@ export class RoomController {
       success: true,
       message: 'Update room successfully',
       data: await this.roomService.update(id, data, images),
+    };
+  }
+
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'Room id to delete',
+  })
+  @Delete(':id')
+  async delete(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<IResponse<null>> {
+    return {
+      success: true,
+      message: 'Delete room successfully',
+      data: await this.roomService.delete(id),
     };
   }
 }

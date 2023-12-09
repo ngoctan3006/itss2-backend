@@ -14,6 +14,8 @@ import { CreateRoomDto, FilterRoomDto, UpdateRoomDto } from './dto';
 @Injectable()
 export class RoomService {
   private readonly logger = new Logger(RoomService.name);
+  private readonly maxWait = 10000;
+  private readonly timeout = 60000;
   constructor(
     private readonly prisma: PrismaService,
     private readonly uploadService: UploadService,
@@ -77,8 +79,8 @@ export class RoomService {
           };
         },
         {
-          maxWait: 10000,
-          timeout: 60000,
+          maxWait: this.maxWait,
+          timeout: this.timeout,
         },
       );
 
@@ -355,6 +357,7 @@ export class RoomService {
     data: UpdateRoomDto,
     images: Express.Multer.File[],
   ): Promise<Room> {
+    const oldRoom = await this.findOneByRoomId(id);
     const {
       name,
       address,
@@ -366,13 +369,6 @@ export class RoomService {
     } = data;
     const room_image: RoomImage[] = [];
     const uploadedUrls: string[] = [];
-    const oldRoom = await this.findOneByRoomId(id);
-    if (!oldRoom)
-      throw new NotFoundException({
-        success: false,
-        message: 'Room not found',
-        data: null,
-      });
     try {
       const newRoom = await this.prisma.$transaction(
         async (prisma) => {
@@ -416,8 +412,8 @@ export class RoomService {
           };
         },
         {
-          maxWait: 10000,
-          timeout: 60000,
+          maxWait: this.maxWait,
+          timeout: this.timeout,
         },
       );
 
@@ -431,6 +427,35 @@ export class RoomService {
       throw new BadRequestException({
         success: false,
         message: error?.message || 'Update room failed',
+        data: null,
+      });
+    }
+  }
+
+  async delete(id: number): Promise<null> {
+    const roomToDelete = await this.findOneByRoomId(id);
+    try {
+      await this.prisma.$transaction(
+        async (prisma) => {
+          await prisma.room.delete({
+            where: { id },
+          });
+          for (const image of roomToDelete.room_image) {
+            await this.uploadService.deleteFileS3(image.image_url);
+            this.logger.log(`Deleted ${image.image_url}`);
+          }
+        },
+        {
+          maxWait: this.maxWait,
+          timeout: this.timeout,
+        },
+      );
+      return null;
+    } catch (error) {
+      this.logger.error(error?.message || 'Delete room failed');
+      throw new BadRequestException({
+        success: false,
+        message: error?.message || 'Delete room failed',
         data: null,
       });
     }
