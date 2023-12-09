@@ -1,7 +1,16 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { ApiConsumes, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 import { IQuery, IResponse } from 'src/common/dtos';
+import { CreateUserDto } from './dto';
 import { UserService } from './user.service';
 
 @ApiTags('user')
@@ -39,6 +48,20 @@ export class UserController {
       success: true,
       message: 'Get user successfully',
       data: user,
+    };
+  }
+
+  @ApiConsumes(
+    'application/x-www-form-urlencoded',
+    'multipart/form-data',
+    'application/json',
+  )
+  @Post()
+  async create(@Body() data: CreateUserDto): Promise<IResponse<User>> {
+    return {
+      success: true,
+      message: 'Create user successfully',
+      data: await this.userService.create(data),
     };
   }
 }

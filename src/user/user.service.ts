@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { User } from '@prisma/client';
 import { IQuery, IResponse } from 'src/common/dtos';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -38,6 +42,13 @@ export class UserService {
       });
     }
     return user;
+  }
+
+  async checkUserExist(username: string): Promise<boolean> {
+    const count = await this.prisma.user.count({
+      where: { username },
+    });
+    return count > 0;
   }
 
   async findAll(
@@ -84,5 +95,23 @@ export class UserService {
     };
   }
 
-  async create(data: CreateUserDto) {}
+  async create(data: CreateUserDto) {
+    const { username, password, role } = data;
+    if (await this.checkUserExist(username)) {
+      throw new BadRequestException({
+        success: false,
+        message: 'Username already exists',
+        data: null,
+      });
+    }
+    const user = await this.prisma.user.create({
+      data: {
+        username,
+        password,
+        role,
+      },
+    });
+    delete user.password;
+    return user;
+  }
 }
