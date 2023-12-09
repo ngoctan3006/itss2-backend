@@ -71,6 +71,11 @@ export class RoomController {
     };
   }
 
+  @ApiQuery({
+    name: 'id',
+    required: true,
+    description: 'Room id',
+  })
   @Get(':id')
   async findOne(
     @Param('id', ParseIntPipe) id: number,
