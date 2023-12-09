@@ -7,6 +7,7 @@ import {
 import { Room, RoomImage } from '@prisma/client';
 import { IPagination, IQuery } from 'src/common/dtos';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { getKeyByFilename } from 'src/utils';
 import { UploadService } from './../upload/upload.service';
 import { CreateRoomDto } from './dto';
 
@@ -72,10 +73,9 @@ export class RoomService {
             },
           });
           for (const image of images) {
-            const key = `room/${room.id}/${image.originalname
-              .split('.')
-              .slice(0, -1)
-              .join('.')}_${Date.now()}`;
+            const key = `room/${room.id}/${getKeyByFilename(
+              image.originalname,
+            )}`;
             const { url } = await this.uploadService.uploadFile(image, key);
             this.logger.log(`Uploaded ${url}`);
             uploadedUrls.push(url);
