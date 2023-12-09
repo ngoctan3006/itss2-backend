@@ -25,39 +25,6 @@ import { RoomService } from './room.service';
 export class RoomController {
   constructor(private readonly roomService: RoomService) {}
 
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FilesInterceptor('images'))
-  @Post()
-  async create(
-    @Body() data: CreateRoomDto,
-    @UploadedFiles(
-      new ParseFilePipeBuilder()
-        .addFileTypeValidator({
-          fileType: 'image',
-        })
-        .addMaxSizeValidator({
-          maxSize: 1024 * 1024 * 5, // 5MB
-          message: 'Dung lượng file không được vượt quá 5MB',
-        })
-        .build({
-          exceptionFactory: (errors) => {
-            throw new BadRequestException({
-              success: false,
-              message: errors,
-              data: null,
-            });
-          },
-        }),
-    )
-    images: Express.Multer.File[],
-  ): Promise<IResponse<Room>> {
-    return {
-      success: true,
-      message: 'Create room successfully',
-      data: await this.roomService.create(data, images),
-    };
-  }
-
   @Get()
   async findAll(@Query() params: FilterRoomDto): Promise<IResponse<Room[]>> {
     return await this.roomService.findAll(params);
@@ -90,6 +57,39 @@ export class RoomController {
     @Query() params: FilterRoomDto,
   ): Promise<IResponse<Room[]>> {
     return await this.roomService.getRoomByOwner(owner_id, params);
+  }
+
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('images'))
+  @Post()
+  async create(
+    @Body() data: CreateRoomDto,
+    @UploadedFiles(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: 'image',
+        })
+        .addMaxSizeValidator({
+          maxSize: 1024 * 1024 * 5, // 5MB
+          message: 'Dung lượng file không được vượt quá 5MB',
+        })
+        .build({
+          exceptionFactory: (errors) => {
+            throw new BadRequestException({
+              success: false,
+              message: errors,
+              data: null,
+            });
+          },
+        }),
+    )
+    images: Express.Multer.File[],
+  ): Promise<IResponse<Room>> {
+    return {
+      success: true,
+      message: 'Create room successfully',
+      data: await this.roomService.create(data, images),
+    };
   }
 
   @ApiParam({
