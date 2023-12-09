@@ -159,4 +159,7 @@ export class CreateRoomDto {
   @IsOptional()
   @IsBoolean()
   safed_device: boolean;
+
+  @ApiProperty({ type: 'string', format: 'binary', isArray: true })
+  images: Express.Multer.File[];
 }
