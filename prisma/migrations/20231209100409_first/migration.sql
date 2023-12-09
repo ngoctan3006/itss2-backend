@@ -128,9 +128,6 @@ CREATE TABLE "MessageImage" (
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Room_name_key" ON "Room"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "RoomAttribute_room_id_key" ON "RoomAttribute"("room_id");
 
 -- AddForeignKey
