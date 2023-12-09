@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsInt, IsOptional, IsString } from 'class-validator';
+import { transformToInteger } from 'src/utils';
 
 enum OrderDirection {
   ASC = 'asc',
@@ -9,13 +10,13 @@ enum OrderDirection {
 
 export class IQuery {
   @ApiProperty({ description: 'Page number', default: 1, required: false })
-  @Transform(({ value }) => parseInt(value))
+  @Transform(transformToInteger)
   @IsOptional()
   @IsInt()
   page: number = 1;
 
   @ApiProperty({ description: 'Page size', default: 10, required: false })
-  @Transform(({ value }) => parseInt(value))
+  @Transform(transformToInteger)
   @IsOptional()
   @IsInt()
   page_size: number = 10;
@@ -26,7 +27,7 @@ export class IQuery {
   search: string = '';
 
   @ApiProperty({
-    description: 'Order by updated_at direction, default is DESC',
+    description: 'Order by updated_at direction',
     enum: OrderDirection,
     default: OrderDirection.DESC,
     required: false,

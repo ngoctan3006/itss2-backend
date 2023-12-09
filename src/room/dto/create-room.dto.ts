@@ -17,7 +17,7 @@ import {
 } from 'src/utils';
 
 export class CreateRoomDto {
-  @ApiProperty({ description: 'Owner id' })
+  @ApiProperty({ description: 'Room owner id' })
   @Transform(transformToInteger)
   @IsNotEmpty()
   @IsInt()
@@ -84,10 +84,10 @@ export class CreateRoomDto {
   description: string;
 
   @ApiProperty({
+    description: 'Has wifi? Default: false',
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has wifi? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
@@ -95,10 +95,10 @@ export class CreateRoomDto {
   wifi_internet: boolean;
 
   @ApiProperty({
+    description: 'Has air conditioner? Default: false',
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has air conditioner? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
@@ -106,10 +106,10 @@ export class CreateRoomDto {
   air_conditioner: boolean;
 
   @ApiProperty({
+    description: 'Has water heater? Default: false',
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has water heater? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
@@ -117,10 +117,10 @@ export class CreateRoomDto {
   water_heater: boolean;
 
   @ApiProperty({
+    description: 'Has refrigerator? Default: false',
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has refrigerator? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
@@ -128,10 +128,10 @@ export class CreateRoomDto {
   refrigerator: boolean;
 
   @ApiProperty({
+    description: 'Has washing machine? Default: false',
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has washing machine? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
@@ -139,10 +139,10 @@ export class CreateRoomDto {
   washing_machine: boolean;
 
   @ApiProperty({
+    description: 'Has enclosed toilet? Default: false',
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has enclosed toilet? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
@@ -150,10 +150,10 @@ export class CreateRoomDto {
   enclosed_toilet: boolean;
 
   @ApiProperty({
+    description: 'Has safed device? Default: false',
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has safed device? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
