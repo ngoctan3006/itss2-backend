@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { Room, RoomImage } from '@prisma/client';
@@ -11,6 +12,7 @@ import { CreateRoomDto } from './dto';
 
 @Injectable()
 export class RoomService {
+  private readonly logger = new Logger(RoomService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly uploadService: UploadService,
@@ -48,51 +50,61 @@ export class RoomService {
       ...attribute
     } = data;
     const room_image: RoomImage[] = [];
+    const uploadedUrls: string[] = [];
     try {
-      const room = await this.prisma.$transaction(async (prisma) => {
-        const room = await prisma.room.create({
-          data: {
-            owner_id,
-            name,
-            address,
-            type,
-            area,
-            distance_to_school,
-            price,
-          },
-        });
-        const room_attribute = await prisma.roomAttribute.create({
-          data: {
-            room_id: room.id,
-            ...attribute,
-          },
-        });
-        for (const image of images) {
-          const key = `room/${room.id}/${image.originalname
-            .split('.')
-            .slice(0, -1)
-            .join('.')}_${Date.now()}`;
-          const { url } = await this.uploadService.uploadFile(image, key);
-          const uploaded = await prisma.roomImage.create({
+      const room = await this.prisma.$transaction(
+        async (prisma) => {
+          const room = await prisma.room.create({
             data: {
-              room_id: room.id,
-              image_url: url,
+              owner_id,
+              name,
+              address,
+              type,
+              area,
+              distance_to_school,
+              price,
             },
           });
-          room_image.push(uploaded);
-        }
-        return {
-          ...room,
-          room_attribute,
-          room_image,
-        };
-      });
+          const room_attribute = await prisma.roomAttribute.create({
+            data: {
+              room_id: room.id,
+              ...attribute,
+            },
+          });
+          for (const image of images) {
+            const key = `room/${room.id}/${image.originalname
+              .split('.')
+              .slice(0, -1)
+              .join('.')}_${Date.now()}`;
+            const { url } = await this.uploadService.uploadFile(image, key);
+            this.logger.log(`Uploaded ${url}`);
+            uploadedUrls.push(url);
+            const uploaded = await prisma.roomImage.create({
+              data: {
+                room_id: room.id,
+                image_url: url,
+              },
+            });
+            room_image.push(uploaded);
+          }
+          return {
+            ...room,
+            room_attribute,
+            room_image,
+          };
+        },
+        {
+          maxWait: 10000,
+          timeout: 60000,
+        },
+      );
 
       return room;
     } catch (error) {
-      for (const image of room_image) {
-        const key = this.uploadService.getKey(image.image_url);
-        await this.uploadService.deleteFileS3(key);
+      this.logger.error(error?.message || 'Create room failed');
+      for (const url of uploadedUrls) {
+        await this.uploadService.deleteFileS3(url);
+        this.logger.log(`Deleted ${url}`);
       }
       throw new BadRequestException({
         success: false,
