@@ -11,7 +11,6 @@ export const setupSwagger = (
     .setTitle(configService.get<string>(ENV_KEY.APP_NAME))
     .setDescription('BKHome api documentation')
     .setVersion('1.0.0')
-    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { S3 } from 'aws-sdk';
 import { extname } from 'path';
 import { ENV_KEY } from 'src/common/constants';
+import { getKeyByFilename } from 'src/utils';
 require('aws-sdk/lib/maintenance_mode_message').suppress = true; // Fix: The AWS SDK for JavaScript (v2) will be put into maintenance mode in 2023. Please upgrade to v3.
 
 @Injectable()
@@ -71,7 +72,9 @@ export class UploadService {
         Body: file.buffer,
         Key: key
           ? `${key}${extname(file.originalname)}`
-          : `${file.filename}_${Date.now()}${extname(file.originalname)}`,
+          : `${getKeyByFilename(file.originalname)}${extname(
+              file.originalname,
+            )}`,
         ContentType: file.mimetype,
         ACL: 'public-read',
       })
