@@ -87,7 +87,7 @@ export class CreateRoomDto {
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has wifi?',
+    description: 'Has wifi? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
@@ -98,7 +98,7 @@ export class CreateRoomDto {
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has air conditioner?',
+    description: 'Has air conditioner? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
@@ -109,7 +109,7 @@ export class CreateRoomDto {
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has water heater?',
+    description: 'Has water heater? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
@@ -120,7 +120,7 @@ export class CreateRoomDto {
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has refrigerator?',
+    description: 'Has refrigerator? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
@@ -131,7 +131,7 @@ export class CreateRoomDto {
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has washing machine?',
+    description: 'Has washing machine? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
@@ -142,7 +142,7 @@ export class CreateRoomDto {
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has enclosed toilet?',
+    description: 'Has enclosed toilet? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
@@ -153,7 +153,7 @@ export class CreateRoomDto {
     type: Boolean,
     default: false,
     required: false,
-    description: 'Has safed device?',
+    description: 'Has safed device? Default is false',
   })
   @Transform(transfromToBoolean)
   @IsOptional()
