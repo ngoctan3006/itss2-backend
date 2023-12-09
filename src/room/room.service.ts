@@ -287,18 +287,17 @@ export class RoomService {
     owner_id: number,
     params: FilterRoomDto,
   ): Promise<IResponse<Room[]>> {
-    const { page, page_size, address, order_direction } = params;
+    const { page, page_size, order_direction } = params;
+    const where = {
+      owner_id,
+      ...this.getCondition(params),
+    };
+
     return {
       success: true,
       message: 'Get rooms successfully',
       data: await this.prisma.room.findMany({
-        where: {
-          owner_id,
-          address: {
-            contains: address,
-            mode: 'insensitive',
-          },
-        },
+        where,
         skip: (page - 1) * page_size,
         take: page_size,
         orderBy: {
@@ -321,13 +320,7 @@ export class RoomService {
         page,
         page_size,
         total: await this.prisma.room.count({
-          where: {
-            owner_id,
-            address: {
-              contains: address,
-              mode: 'insensitive',
-            },
-          },
+          where,
         }),
       },
     };
