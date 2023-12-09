@@ -7,6 +7,7 @@ import {
   ParseFilePipeBuilder,
   ParseIntPipe,
   Post,
+  Put,
   Query,
   UploadedFiles,
   UseInterceptors,
@@ -15,7 +16,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Room } from '@prisma/client';
 import { IResponse } from 'src/common/dtos';
-import { CreateRoomDto, FilterRoomDto } from './dto';
+import { CreateRoomDto, FilterRoomDto, UpdateRoomDto } from './dto';
 import { RoomService } from './room.service';
 
 @ApiTags('room')
@@ -88,5 +89,44 @@ export class RoomController {
     @Query() params: FilterRoomDto,
   ): Promise<IResponse<Room[]>> {
     return await this.roomService.getRoomByOwner(owner_id, params);
+  }
+
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'Room id to update',
+  })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('images'))
+  @Put(':id')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: UpdateRoomDto,
+    @UploadedFiles(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: 'image',
+        })
+        .addMaxSizeValidator({
+          maxSize: 1024 * 1024 * 5, // 5MB
+          message: 'Dung lượng file không được vượt quá 5MB',
+        })
+        .build({
+          exceptionFactory: (errors) => {
+            throw new BadRequestException({
+              success: false,
+              message: errors,
+              data: null,
+            });
+          },
+        }),
+    )
+    images: Express.Multer.File[],
+  ): Promise<IResponse<Room>> {
+    return {
+      success: true,
+      message: 'Update room successfully',
+      data: await this.roomService.update(id, data, images),
+    };
   }
 }

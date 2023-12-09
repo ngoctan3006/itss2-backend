@@ -9,7 +9,7 @@ import { IResponse } from 'src/common/dtos';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getKeyByFilename } from 'src/utils';
 import { UploadService } from './../upload/upload.service';
-import { CreateRoomDto, FilterRoomDto } from './dto';
+import { CreateRoomDto, FilterRoomDto, UpdateRoomDto } from './dto';
 
 @Injectable()
 export class RoomService {
@@ -250,8 +250,6 @@ export class RoomService {
     const { page, page_size, order_direction } = params;
     const where = this.getCondition(params);
 
-    this.logger.log(where);
-
     return {
       success: true,
       message: 'Get rooms successfully',
@@ -319,14 +317,14 @@ export class RoomService {
       pagination: {
         page,
         page_size,
-        total: await this.prisma.room.count({
-          where,
-        }),
+        total: await this.prisma.room.count({ where }),
       },
     };
   }
 
-  async findOneByRoomId(id: number): Promise<Room> {
+  async findOneByRoomId(
+    id: number,
+  ): Promise<Room & { room_image: RoomImage[] }> {
     const room = await this.prisma.room.findUnique({
       where: { id },
       include: {
@@ -350,5 +348,91 @@ export class RoomService {
       });
     }
     return room;
+  }
+
+  async update(
+    id: number,
+    data: UpdateRoomDto,
+    images: Express.Multer.File[],
+  ): Promise<Room> {
+    const {
+      name,
+      address,
+      type,
+      area,
+      distance_to_school,
+      price,
+      ...attribute
+    } = data;
+    const room_image: RoomImage[] = [];
+    const uploadedUrls: string[] = [];
+    const oldRoom = await this.findOneByRoomId(id);
+    if (!oldRoom)
+      throw new NotFoundException({
+        success: false,
+        message: 'Room not found',
+        data: null,
+      });
+    try {
+      const newRoom = await this.prisma.$transaction(
+        async (prisma) => {
+          const room = await prisma.room.update({
+            where: { id },
+            data: { name, address, type, area, distance_to_school, price },
+          });
+          const room_attribute = await prisma.roomAttribute.update({
+            where: { room_id: room.id },
+            data: {
+              ...attribute,
+            },
+          });
+          for (const image of images) {
+            const key = `room/${room.id}/${getKeyByFilename(
+              image.originalname,
+            )}`;
+            const { url } = await this.uploadService.uploadFile(image, key);
+            this.logger.log(`Uploaded ${url}`);
+            uploadedUrls.push(url);
+            const newRoomImage = await prisma.roomImage.create({
+              data: {
+                room_id: room.id,
+                image_url: url,
+              },
+            });
+            room_image.push(newRoomImage);
+          }
+
+          for (const image of oldRoom.room_image) {
+            await this.uploadService.deleteFileS3(image.image_url);
+            this.logger.log(`Deleted ${image.image_url}`);
+            await this.prisma.roomImage.delete({
+              where: { id: image.id },
+            });
+          }
+          return {
+            ...room,
+            room_attribute,
+            room_image,
+          };
+        },
+        {
+          maxWait: 10000,
+          timeout: 60000,
+        },
+      );
+
+      return newRoom;
+    } catch (error) {
+      this.logger.error(error?.message || 'Update room failed');
+      for (const url of uploadedUrls) {
+        await this.uploadService.deleteFileS3(url);
+        this.logger.log(`Deleted ${url}`);
+      }
+      throw new BadRequestException({
+        success: false,
+        message: error?.message || 'Update room failed',
+        data: null,
+      });
+    }
   }
 }
