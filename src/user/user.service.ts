@@ -42,12 +42,19 @@ export class UserService {
 
   async findAll(
     params: IQuery,
+    seach: string,
   ): Promise<IResponse<Array<Omit<User, 'password'>>>> {
     const { page, page_size, order_direction } = params;
     return {
       success: true,
       message: 'Get all users successfully',
       data: await this.prisma.user.findMany({
+        where: {
+          username: {
+            contains: seach,
+            mode: 'insensitive',
+          },
+        },
         skip: page_size * (page - 1),
         take: page_size,
         orderBy: {
@@ -65,7 +72,14 @@ export class UserService {
       pagination: {
         page,
         page_size,
-        total: await this.prisma.user.count(),
+        total: await this.prisma.user.count({
+          where: {
+            username: {
+              contains: seach,
+              mode: 'insensitive',
+            },
+          },
+        }),
       },
     };
   }

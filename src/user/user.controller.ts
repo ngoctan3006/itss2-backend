@@ -1,5 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiTags } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 import { IQuery, IResponse } from 'src/common/dtos';
 import { UserService } from './user.service';
@@ -9,10 +9,17 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search user by username',
+  })
   @Get()
   async findAll(
     @Query() params: IQuery,
+    @Query('search') search: string,
   ): Promise<IResponse<Array<Omit<User, 'password'>>>> {
-    return await this.userService.findAll(params);
+    return await this.userService.findAll(params, search);
   }
 }
