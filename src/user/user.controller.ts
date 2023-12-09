@@ -1,16 +1,28 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
   Param,
+  ParseFilePipeBuilder,
   ParseIntPipe,
   Post,
+  Put,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiConsumes, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { User } from '@prisma/client';
 import { IQuery, IResponse } from 'src/common/dtos';
-import { CreateUserDto } from './dto';
+import { ChangeAvatarDto, CreateUserDto } from './dto';
 import { UserService } from './user.service';
 
 @ApiTags('user')
@@ -62,6 +74,46 @@ export class UserController {
       success: true,
       message: 'Create user successfully',
       data: await this.userService.create(data),
+    };
+  }
+
+  @ApiConsumes('multipart/form-data')
+  @ApiParam({
+    name: 'id',
+    required: true,
+    type: Number,
+    description: 'User ID to update',
+  })
+  @ApiBody({ type: ChangeAvatarDto })
+  @UseInterceptors(FileInterceptor('image'))
+  @Put('avatar/:id')
+  async changeAvatar(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: 'image',
+        })
+        .addMaxSizeValidator({
+          maxSize: 1024 * 1024 * 5, // 5MB
+          message: 'Dung lượng file không được vượt quá 5MB',
+        })
+        .build({
+          exceptionFactory: (errors) => {
+            throw new BadRequestException({
+              success: false,
+              message: errors,
+              data: null,
+            });
+          },
+        }),
+    )
+    image: Express.Multer.File,
+  ): Promise<IResponse<User>> {
+    return {
+      success: true,
+      message: 'Update user successfully',
+      data: await this.userService.changeAvatar(id, image),
     };
   }
 }

@@ -1,16 +1,19 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { IQuery, IResponse } from 'src/common/dtos';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UploadService } from 'src/upload/upload.service';
+import { getKeyByFilename } from 'src/utils';
 import { CreateUserDto } from './dto';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly uploadService: UploadService,
@@ -112,6 +115,24 @@ export class UserService {
       },
     });
     delete user.password;
+    return user;
+  }
+
+  async changeAvatar(id: number, file: Express.Multer.File): Promise<User> {
+    const { username, avatar } = await this.findOneById(id);
+    const key = `avatar/${username}/${getKeyByFilename(file.originalname)}`;
+    const { url } = await this.uploadService.uploadFile(file, key);
+    this.logger.log(`Upload avatar of user ${username} successfully to ${url}`);
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: { avatar: url },
+    });
+    if (avatar) {
+      await this.uploadService.deleteFileS3(avatar);
+      this.logger.log(
+        `Delete old avatar of user ${username} successfully ${avatar}`,
+      );
+    }
     return user;
   }
 }
