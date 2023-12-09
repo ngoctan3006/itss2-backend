@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Room, RoomImage } from '@prisma/client';
 import { IPagination, IQuery } from 'src/common/dtos';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -110,6 +114,14 @@ export class RoomService {
       skip: (page - 1) * page_size,
       take: page_size,
       include: {
+        owner: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+            role: true,
+          },
+        },
         room_attribute: true,
         room_image: true,
       },
@@ -117,6 +129,28 @@ export class RoomService {
   }
 
   async findOne(id: number): Promise<Room> {
-    return this.prisma.room.findUnique({ where: { id } });
+    const room = await this.prisma.room.findUnique({
+      where: { id },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+            role: true,
+          },
+        },
+        room_attribute: true,
+        room_image: true,
+      },
+    });
+    if (!room) {
+      throw new NotFoundException({
+        success: false,
+        message: 'Room not found',
+        data: null,
+      });
+    }
+    return room;
   }
 }
