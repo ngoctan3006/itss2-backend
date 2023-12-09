@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Room, RoomImage } from '@prisma/client';
-import { IPagination, IQuery } from 'src/common/dtos';
+import { IQuery, IResponse } from 'src/common/dtos';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getKeyByFilename } from 'src/utils';
 import { UploadService } from './../upload/upload.service';
@@ -18,23 +18,6 @@ export class RoomService {
     private readonly prisma: PrismaService,
     private readonly uploadService: UploadService,
   ) {}
-
-  async getPagination(params: IQuery, field: keyof Room): Promise<IPagination> {
-    const { page, page_size, search } = params;
-    const total = await this.prisma.room.count({
-      where: {
-        [field]: {
-          contains: search,
-          mode: 'insensitive',
-        },
-      },
-    });
-    return {
-      page,
-      page_size,
-      total,
-    };
-  }
 
   async create(
     data: CreateRoomDto,
@@ -114,36 +97,103 @@ export class RoomService {
     }
   }
 
-  async findAll(params: IQuery): Promise<Room[]> {
+  async findAll(params: IQuery): Promise<IResponse<Room[]>> {
     const { page, page_size, search, order_direction } = params;
-    return this.prisma.room.findMany({
-      where: {
-        address: {
-          contains: search,
-          mode: 'insensitive',
-        },
-      },
-      skip: (page - 1) * page_size,
-      take: page_size,
-      orderBy: {
-        updated_at: order_direction,
-      },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            username: true,
-            avatar: true,
-            role: true,
+
+    return {
+      success: true,
+      message: 'Get rooms successfully',
+      data: await this.prisma.room.findMany({
+        where: {
+          address: {
+            contains: search,
+            mode: 'insensitive',
           },
         },
-        room_attribute: true,
-        room_image: true,
+        skip: (page - 1) * page_size,
+        take: page_size,
+        orderBy: {
+          updated_at: order_direction,
+        },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              username: true,
+              avatar: true,
+              role: true,
+            },
+          },
+          room_attribute: true,
+          room_image: true,
+        },
+      }),
+      pagination: {
+        page,
+        page_size,
+        total: await this.prisma.room.count({
+          where: {
+            address: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+        }),
       },
-    });
+    };
   }
 
-  async findOne(id: number): Promise<Room> {
+  async getRoomByOwner(
+    owner_id: number,
+    params: IQuery,
+  ): Promise<IResponse<Room[]>> {
+    const { page, page_size, search, order_direction } = params;
+    return {
+      success: true,
+      message: 'Get rooms successfully',
+      data: await this.prisma.room.findMany({
+        where: {
+          owner_id,
+          address: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        skip: (page - 1) * page_size,
+        take: page_size,
+        orderBy: {
+          updated_at: order_direction,
+        },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              username: true,
+              avatar: true,
+              role: true,
+            },
+          },
+          room_attribute: true,
+          room_image: true,
+        },
+      }),
+      pagination: {
+        page,
+        page_size,
+        total: await this.prisma.room.count({
+          where: {
+            owner_id,
+            address: {
+              contains: search,
+              mode: 'insensitive',
+            },
+          },
+        }),
+      },
+    };
+  }
+
+  async findOneByRoomId(id: number): Promise<Room> {
     const room = await this.prisma.room.findUnique({
       where: { id },
       include: {

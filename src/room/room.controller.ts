@@ -12,7 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Room } from '@prisma/client';
 import { IQuery, IResponse } from 'src/common/dtos';
 import { CreateRoomDto } from './dto';
@@ -63,27 +63,35 @@ export class RoomController {
   })
   @Get()
   async findAll(@Query() params: IQuery): Promise<IResponse<Room[]>> {
-    return {
-      success: true,
-      message: 'Get rooms successfully',
-      data: await this.roomService.findAll(params),
-      pagination: await this.roomService.getPagination(params, 'address'),
-    };
+    return await this.roomService.findAll(params);
   }
 
-  @ApiQuery({
+  @ApiParam({
     name: 'id',
     required: true,
     description: 'Room id',
   })
   @Get(':id')
-  async findOne(
+  async findOneById(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<IResponse<Room>> {
     return {
       success: true,
       message: 'Get room successfully',
-      data: await this.roomService.findOne(id),
+      data: await this.roomService.findOneByRoomId(id),
     };
+  }
+
+  @ApiParam({
+    name: 'owner_id',
+    required: true,
+    description: 'Room owner id',
+  })
+  @Get('owner/:owner_id')
+  async getRoomByOwner(
+    @Param('owner_id', ParseIntPipe) owner_id: number,
+    @Query() params: IQuery,
+  ): Promise<IResponse<Room[]>> {
+    return await this.roomService.getRoomByOwner(owner_id, params);
   }
 }
