@@ -75,10 +75,8 @@ export class RoomService {
               image_url: url,
             },
           });
-          delete uploaded.room_id;
           room_image.push(uploaded);
         }
-        delete room_attribute.room_id;
         return {
           ...room,
           room_attribute,
@@ -111,6 +109,10 @@ export class RoomService {
       },
       skip: (page - 1) * page_size,
       take: page_size,
+      include: {
+        room_attribute: true,
+        room_image: true,
+      },
     });
   }
 
