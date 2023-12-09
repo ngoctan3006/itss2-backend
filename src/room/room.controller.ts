@@ -12,10 +12,10 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Room } from '@prisma/client';
-import { IQuery, IResponse } from 'src/common/dtos';
-import { CreateRoomDto } from './dto';
+import { IResponse } from 'src/common/dtos';
+import { CreateRoomDto, FilterRoomDto } from './dto';
 import { RoomService } from './room.service';
 
 @ApiTags('room')
@@ -56,13 +56,8 @@ export class RoomController {
     };
   }
 
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    description: 'Search by address',
-  })
   @Get()
-  async findAll(@Query() params: IQuery): Promise<IResponse<Room[]>> {
+  async findAll(@Query() params: FilterRoomDto): Promise<IResponse<Room[]>> {
     return await this.roomService.findAll(params);
   }
 
@@ -90,7 +85,7 @@ export class RoomController {
   @Get('owner/:owner_id')
   async getRoomByOwner(
     @Param('owner_id', ParseIntPipe) owner_id: number,
-    @Query() params: IQuery,
+    @Query() params: FilterRoomDto,
   ): Promise<IResponse<Room[]>> {
     return await this.roomService.getRoomByOwner(owner_id, params);
   }
