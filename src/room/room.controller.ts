@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
   Param,
+  ParseFilePipeBuilder,
   ParseIntPipe,
   Post,
   Query,
@@ -26,7 +28,26 @@ export class RoomController {
   @Post()
   async create(
     @Body() data: CreateRoomDto,
-    @UploadedFiles() images: Express.Multer.File[],
+    @UploadedFiles(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: 'image',
+        })
+        .addMaxSizeValidator({
+          maxSize: 1024 * 1024 * 5, // 5MB
+          message: 'Dung lượng file không được vượt quá 5MB',
+        })
+        .build({
+          exceptionFactory: (errors) => {
+            throw new BadRequestException({
+              success: false,
+              message: errors,
+              data: null,
+            });
+          },
+        }),
+    )
+    images: Express.Multer.File[],
   ): Promise<IResponse<Room>> {
     return {
       success: true,
