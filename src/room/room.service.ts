@@ -4,11 +4,12 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Room, RoomImage } from '@prisma/client';
+import { Role, Room, RoomImage } from '@prisma/client';
 import { IResponse } from 'src/common/dtos';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getKeyByFilename } from 'src/utils';
 import { UploadService } from './../upload/upload.service';
+import { UserService } from './../user/user.service';
 import { CreateRoomDto, FilterRoomDto, UpdateRoomDto } from './dto';
 
 @Injectable()
@@ -19,6 +20,7 @@ export class RoomService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly uploadService: UploadService,
+    private readonly userService: UserService,
   ) {}
 
   async create(
@@ -35,6 +37,14 @@ export class RoomService {
       price,
       ...attribute
     } = data;
+    const owner = await this.userService.findOneById(owner_id);
+    if (owner.role !== Role.OWNER) {
+      throw new BadRequestException({
+        success: false,
+        message: 'User is not owner',
+        data: null,
+      });
+    }
     const room_image: RoomImage[] = [];
     const uploadedUrls: string[] = [];
     try {
@@ -74,6 +84,7 @@ export class RoomService {
           }
           return {
             ...room,
+            owner,
             room_attribute,
             room_image,
           };
