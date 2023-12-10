@@ -8,6 +8,7 @@ import { setupSwagger } from './utils';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'],
+    cors: true,
   });
   const configService = app.get(ConfigService);
   const logger = new Logger('Main');
