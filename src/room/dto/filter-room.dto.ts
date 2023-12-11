@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { RoomType } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
+  IsArray,
   IsBoolean,
   IsInt,
   IsNumber,
@@ -29,11 +30,11 @@ export class FilterRoomDto extends IQuery {
   @ApiProperty({
     description: 'Room type',
     enum: RoomType,
+    isArray: true,
     required: false,
   })
   @IsOptional()
-  @IsString()
-  type: RoomType;
+  type: RoomType[];
 
   @ApiProperty({ description: 'Room area from', required: false })
   @Transform(transformToNumber)
