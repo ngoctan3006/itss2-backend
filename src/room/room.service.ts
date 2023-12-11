@@ -146,7 +146,11 @@ export class RoomService {
       };
     }
     if (type) {
-      condition['type'] = type;
+      if (typeof type === 'string') {
+        condition['type'] = type;
+      } else {
+        condition['type'] = { in: type };
+      }
     }
     if (area_from) {
       condition['area'] = {
