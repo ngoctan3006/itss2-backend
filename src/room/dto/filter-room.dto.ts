@@ -29,12 +29,11 @@ export class FilterRoomDto extends IQuery {
   @ApiProperty({
     description: 'Room type',
     enum: RoomType,
-    default: RoomType.PHONG_TRO,
     required: false,
   })
   @IsOptional()
   @IsString()
-  type: RoomType = RoomType.PHONG_TRO;
+  type: RoomType;
 
   @ApiProperty({ description: 'Room area from', required: false })
   @Transform(transformToNumber)
