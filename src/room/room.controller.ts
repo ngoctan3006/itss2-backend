@@ -224,4 +224,20 @@ export class RoomController {
       data: await this.roomService.updateReview(id, data, images),
     };
   }
+
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'Review id to delete',
+  })
+  @Delete('review/:id')
+  async deleteReview(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<IResponse<null>> {
+    return {
+      success: true,
+      message: 'Delete review successfully',
+      data: await this.roomService.deleteReview(id),
+    };
+  }
 }

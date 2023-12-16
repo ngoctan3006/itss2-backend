@@ -617,4 +617,45 @@ export class RoomService {
       });
     }
   }
+
+  async deleteReview(id: number): Promise<null> {
+    const reviewToDelete = await this.prisma.review.findUnique({
+      where: { id },
+      include: {
+        review_image: true,
+      },
+    });
+    if (!reviewToDelete) {
+      throw new NotFoundException({
+        success: false,
+        message: 'Review not found',
+        data: null,
+      });
+    }
+    try {
+      await this.prisma.$transaction(
+        async (prisma) => {
+          await prisma.review.delete({
+            where: { id },
+          });
+          for (const image of reviewToDelete.review_image) {
+            await this.uploadService.deleteFileS3(image.image_url);
+            this.logger.log(`Deleted ${image.image_url}`);
+          }
+        },
+        {
+          maxWait: this.maxWait,
+          timeout: this.timeout,
+        },
+      );
+      return null;
+    } catch (error) {
+      this.logger.error(error?.message || 'Delete review failed');
+      throw new BadRequestException({
+        success: false,
+        message: error?.message || 'Delete review failed',
+        data: null,
+      });
+    }
+  }
 }
