@@ -4,13 +4,18 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Role, Room, RoomImage } from '@prisma/client';
+import { Review, ReviewImage, Role, Room, RoomImage } from '@prisma/client';
 import { IResponse } from 'src/common/dtos';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getKeyByFilename } from 'src/utils';
 import { UploadService } from './../upload/upload.service';
 import { UserService } from './../user/user.service';
-import { CreateRoomDto, FilterRoomDto, UpdateRoomDto } from './dto';
+import {
+  CreateRoomDto,
+  FilterRoomDto,
+  ReviewRoomDto,
+  UpdateRoomDto,
+} from './dto';
 
 @Injectable()
 export class RoomService {
@@ -471,6 +476,65 @@ export class RoomService {
       throw new BadRequestException({
         success: false,
         message: error?.message || 'Delete room failed',
+        data: null,
+      });
+    }
+  }
+
+  async reviewRoom(
+    data: ReviewRoomDto,
+    images: Express.Multer.File[],
+  ): Promise<Review> {
+    const { user_id, room_id, content, star } = data;
+    const uploadedUrls: string[] = [];
+    const review_image: ReviewImage[] = [];
+    try {
+      const review = await this.prisma.$transaction(
+        async (prisma) => {
+          const review = await prisma.review.create({
+            data: {
+              user_id,
+              room_id,
+              content,
+              star,
+            },
+          });
+          for (const image of images) {
+            const key = `review/${room_id}/${getKeyByFilename(
+              image.originalname,
+            )}`;
+            const { url } = await this.uploadService.uploadFile(image, key);
+            this.logger.log(`Uploaded ${url}`);
+            uploadedUrls.push(url);
+            const reviewImage = await prisma.reviewImage.create({
+              data: {
+                review_id: review.id,
+                image_url: url,
+              },
+            });
+            review_image.push(reviewImage);
+          }
+          return {
+            ...review,
+            review_image,
+          };
+        },
+        {
+          maxWait: this.maxWait,
+          timeout: this.timeout,
+        },
+      );
+
+      return review;
+    } catch (error) {
+      this.logger.error(error?.message || 'Review room failed');
+      for (const url of uploadedUrls) {
+        await this.uploadService.deleteFileS3(url);
+        this.logger.log(`Deleted ${url}`);
+      }
+      throw new BadRequestException({
+        success: false,
+        message: error?.message || 'Review room failed',
         data: null,
       });
     }
