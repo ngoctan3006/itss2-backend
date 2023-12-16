@@ -294,6 +294,19 @@ export class RoomService {
           },
           room_attribute: true,
           room_image: true,
+          review: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  avatar: true,
+                  role: true,
+                },
+              },
+              review_image: true,
+            },
+          },
         },
       }),
       pagination: {
@@ -335,6 +348,19 @@ export class RoomService {
           },
           room_attribute: true,
           room_image: true,
+          review: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  avatar: true,
+                  role: true,
+                },
+              },
+              review_image: true,
+            },
+          },
         },
       }),
       pagination: {
@@ -347,7 +373,7 @@ export class RoomService {
 
   async findOneByRoomId(
     id: number,
-  ): Promise<Room & { room_image: RoomImage[] }> {
+  ): Promise<Room & { room_image: RoomImage[]; review: Review[] }> {
     const room = await this.prisma.room.findUnique({
       where: { id },
       include: {
@@ -361,6 +387,19 @@ export class RoomService {
         },
         room_attribute: true,
         room_image: true,
+        review: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                avatar: true,
+                role: true,
+              },
+            },
+            review_image: true,
+          },
+        },
       },
     });
     if (!room) {
@@ -430,6 +469,7 @@ export class RoomService {
             ...room,
             room_attribute,
             room_image,
+            review: oldRoom.review,
           };
         },
         {
@@ -487,6 +527,29 @@ export class RoomService {
     images: Express.Multer.File[],
   ): Promise<Review> {
     const { user_id, room_id, content, star } = data;
+    const user = await this.userService.findOneById(user_id);
+    if (!user) {
+      throw new NotFoundException({
+        success: false,
+        message: 'User not found',
+        data: null,
+      });
+    }
+    if (user.role !== Role.USER) {
+      throw new BadRequestException({
+        success: false,
+        message: 'Only user can review room',
+        data: null,
+      });
+    }
+    const room = await this.findOneByRoomId(room_id);
+    if (!room) {
+      throw new NotFoundException({
+        success: false,
+        message: 'Room not found',
+        data: null,
+      });
+    }
     const uploadedUrls: string[] = [];
     const review_image: ReviewImage[] = [];
     try {
