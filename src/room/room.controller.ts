@@ -15,9 +15,15 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
-import { Room } from '@prisma/client';
+import { Review, Room } from '@prisma/client';
 import { IResponse } from 'src/common/dtos';
-import { CreateRoomDto, FilterRoomDto, UpdateRoomDto } from './dto';
+import {
+  CreateRoomDto,
+  FilterRoomDto,
+  ReviewRoomDto,
+  UpdateReviewDto,
+  UpdateRoomDto,
+} from './dto';
 import { RoomService } from './room.service';
 
 @ApiTags('room')
@@ -144,6 +150,94 @@ export class RoomController {
       success: true,
       message: 'Delete room successfully',
       data: await this.roomService.delete(id),
+    };
+  }
+
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('images'))
+  @Post('review')
+  async reviewRoom(
+    @Body() data: ReviewRoomDto,
+    @UploadedFiles(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: 'image',
+        })
+        .addMaxSizeValidator({
+          maxSize: 1024 * 1024 * 5, // 5MB
+          message: 'Dung lượng file không được vượt quá 5MB',
+        })
+        .build({
+          exceptionFactory: (errors) => {
+            throw new BadRequestException({
+              success: false,
+              message: errors,
+              data: null,
+            });
+          },
+        }),
+    )
+    images: Express.Multer.File[],
+  ): Promise<IResponse<Review>> {
+    return {
+      success: true,
+      message: 'Review room successfully',
+      data: await this.roomService.reviewRoom(data, images),
+    };
+  }
+
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'Review id to update',
+  })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('images'))
+  @Put('review/:id')
+  async updateReview(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: UpdateReviewDto,
+    @UploadedFiles(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: 'image',
+        })
+        .addMaxSizeValidator({
+          maxSize: 1024 * 1024 * 5, // 5MB
+          message: 'Dung lượng file không được vượt quá 5MB',
+        })
+        .build({
+          exceptionFactory: (errors) => {
+            throw new BadRequestException({
+              success: false,
+              message: errors,
+              data: null,
+            });
+          },
+        }),
+    )
+    images: Express.Multer.File[],
+  ): Promise<IResponse<Review>> {
+    return {
+      success: true,
+      message: 'Update review successfully',
+      data: await this.roomService.updateReview(id, data, images),
+    };
+  }
+
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: 'Review id to delete',
+  })
+  @Delete('review/:id')
+  async deleteReview(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<IResponse<null>> {
+    return {
+      success: true,
+      message: 'Delete review successfully',
+      data: await this.roomService.deleteReview(id),
     };
   }
 }
