@@ -14,6 +14,7 @@ import {
   CreateRoomDto,
   FilterRoomDto,
   ReviewRoomDto,
+  UpdateReviewDto,
   UpdateRoomDto,
 } from './dto';
 
@@ -535,6 +536,83 @@ export class RoomService {
       throw new BadRequestException({
         success: false,
         message: error?.message || 'Review room failed',
+        data: null,
+      });
+    }
+  }
+
+  async updateReview(
+    id: number,
+    data: UpdateReviewDto,
+    images: Express.Multer.File[],
+  ): Promise<Review> {
+    const oldReview = await this.prisma.review.findUnique({
+      where: { id },
+      include: {
+        review_image: true,
+      },
+    });
+    if (!oldReview) {
+      throw new NotFoundException({
+        success: false,
+        message: 'Review not found',
+        data: null,
+      });
+    }
+    const { content, star } = data;
+    const review_image: ReviewImage[] = [];
+    const uploadedUrls: string[] = [];
+    try {
+      const newReview = await this.prisma.$transaction(
+        async (prisma) => {
+          const review = await prisma.review.update({
+            where: { id },
+            data: { content, star },
+          });
+          for (const image of images) {
+            const key = `review/${review.room_id}/${getKeyByFilename(
+              image.originalname,
+            )}`;
+            const { url } = await this.uploadService.uploadFile(image, key);
+            this.logger.log(`Uploaded ${url}`);
+            uploadedUrls.push(url);
+            const newReviewImage = await prisma.reviewImage.create({
+              data: {
+                review_id: review.id,
+                image_url: url,
+              },
+            });
+            review_image.push(newReviewImage);
+          }
+
+          for (const image of oldReview.review_image) {
+            await this.uploadService.deleteFileS3(image.image_url);
+            this.logger.log(`Deleted ${image.image_url}`);
+            await this.prisma.reviewImage.delete({
+              where: { id: image.id },
+            });
+          }
+          return {
+            ...review,
+            review_image,
+          };
+        },
+        {
+          maxWait: this.maxWait,
+          timeout: this.timeout,
+        },
+      );
+
+      return newReview;
+    } catch (error) {
+      this.logger.error(error?.message || 'Update review failed');
+      for (const url of uploadedUrls) {
+        await this.uploadService.deleteFileS3(url);
+        this.logger.log(`Deleted ${url}`);
+      }
+      throw new BadRequestException({
+        success: false,
+        message: error?.message || 'Update review failed',
         data: null,
       });
     }
