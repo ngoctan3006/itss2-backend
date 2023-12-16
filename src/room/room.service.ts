@@ -294,6 +294,19 @@ export class RoomService {
           },
           room_attribute: true,
           room_image: true,
+          review: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  avatar: true,
+                  role: true,
+                },
+              },
+              review_image: true,
+            },
+          },
         },
       }),
       pagination: {
@@ -335,6 +348,19 @@ export class RoomService {
           },
           room_attribute: true,
           room_image: true,
+          review: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  avatar: true,
+                  role: true,
+                },
+              },
+              review_image: true,
+            },
+          },
         },
       }),
       pagination: {
@@ -347,7 +373,7 @@ export class RoomService {
 
   async findOneByRoomId(
     id: number,
-  ): Promise<Room & { room_image: RoomImage[] }> {
+  ): Promise<Room & { room_image: RoomImage[]; review: Review[] }> {
     const room = await this.prisma.room.findUnique({
       where: { id },
       include: {
@@ -361,6 +387,19 @@ export class RoomService {
         },
         room_attribute: true,
         room_image: true,
+        review: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                avatar: true,
+                role: true,
+              },
+            },
+            review_image: true,
+          },
+        },
       },
     });
     if (!room) {
@@ -430,6 +469,7 @@ export class RoomService {
             ...room,
             room_attribute,
             room_image,
+            review: oldRoom.review,
           };
         },
         {
