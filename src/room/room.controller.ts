@@ -16,7 +16,7 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Review, Room } from '@prisma/client';
-import { IQuery, IResponse } from 'src/common/dtos';
+import { IResponse } from 'src/common/dtos';
 import {
   CreateRoomDto,
   FilterRoomDto,
@@ -239,18 +239,5 @@ export class RoomController {
       message: 'Delete review successfully',
       data: await this.roomService.deleteReview(id),
     };
-  }
-
-  @ApiParam({
-    name: 'room_id',
-    required: true,
-    description: 'Room id',
-  })
-  @Get('review/:room_id')
-  async getReviewByRoomId(
-    @Param('room_id', ParseIntPipe) room_id: number,
-    @Query() params: IQuery,
-  ): Promise<IResponse<Review[]>> {
-    return await this.roomService.getReviewByRoomId(room_id, params);
   }
 }
