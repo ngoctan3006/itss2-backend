@@ -482,6 +482,41 @@ export class RoomService {
     }
   }
 
+  async getReviewByRoomId(
+    room_id: number,
+    query: IQuery,
+  ): Promise<IResponse<Review[]>> {
+    const { page, page_size, order_direction } = query;
+    return {
+      success: true,
+      message: 'Get reviews successfully',
+      data: await this.prisma.review.findMany({
+        where: { room_id },
+        skip: (page - 1) * page_size,
+        take: page_size,
+        orderBy: {
+          updated_at: order_direction,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              avatar: true,
+              role: true,
+            },
+          },
+          review_image: true,
+        },
+      }),
+      pagination: {
+        page,
+        page_size,
+        total: await this.prisma.review.count({ where: { room_id } }),
+      },
+    };
+  }
+
   async reviewRoom(
     data: ReviewRoomDto,
     images: Express.Multer.File[],
