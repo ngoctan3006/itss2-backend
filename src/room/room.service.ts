@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Review, ReviewImage, Role, Room, RoomImage } from '@prisma/client';
-import { IResponse } from 'src/common/dtos';
+import { IQuery, IResponse } from 'src/common/dtos';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { getKeyByFilename } from 'src/utils';
 import { UploadService } from './../upload/upload.service';
@@ -294,19 +294,6 @@ export class RoomService {
           },
           room_attribute: true,
           room_image: true,
-          review: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  username: true,
-                  avatar: true,
-                  role: true,
-                },
-              },
-              review_image: true,
-            },
-          },
         },
       }),
       pagination: {
@@ -348,19 +335,6 @@ export class RoomService {
           },
           room_attribute: true,
           room_image: true,
-          review: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  username: true,
-                  avatar: true,
-                  role: true,
-                },
-              },
-              review_image: true,
-            },
-          },
         },
       }),
       pagination: {
@@ -373,7 +347,7 @@ export class RoomService {
 
   async findOneByRoomId(
     id: number,
-  ): Promise<Room & { room_image: RoomImage[]; review: Review[] }> {
+  ): Promise<Room & { room_image: RoomImage[] }> {
     const room = await this.prisma.room.findUnique({
       where: { id },
       include: {
@@ -387,19 +361,6 @@ export class RoomService {
         },
         room_attribute: true,
         room_image: true,
-        review: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                avatar: true,
-                role: true,
-              },
-            },
-            review_image: true,
-          },
-        },
       },
     });
     if (!room) {
@@ -469,7 +430,6 @@ export class RoomService {
             ...room,
             room_attribute,
             room_image,
-            review: oldRoom.review,
           };
         },
         {
@@ -520,6 +480,41 @@ export class RoomService {
         data: null,
       });
     }
+  }
+
+  async getReviewByRoomId(
+    room_id: number,
+    query: IQuery,
+  ): Promise<IResponse<Review[]>> {
+    const { page, page_size, order_direction } = query;
+    return {
+      success: true,
+      message: 'Get reviews successfully',
+      data: await this.prisma.review.findMany({
+        where: { room_id },
+        skip: (page - 1) * page_size,
+        take: page_size,
+        orderBy: {
+          updated_at: order_direction,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              avatar: true,
+              role: true,
+            },
+          },
+          review_image: true,
+        },
+      }),
+      pagination: {
+        page,
+        page_size,
+        total: await this.prisma.review.count({ where: { room_id } }),
+      },
+    };
   }
 
   async reviewRoom(
