@@ -376,7 +376,7 @@ export class RoomService {
   async update(
     id: number,
     data: UpdateRoomDto,
-    images: Express.Multer.File[],
+    images?: Express.Multer.File[],
   ): Promise<Room> {
     const oldRoom = await this.findOneByRoomId(id);
     const {
@@ -403,29 +403,32 @@ export class RoomService {
               ...attribute,
             },
           });
-          for (const image of images) {
-            const key = `room/${room.id}/${getKeyByFilename(
-              image.originalname,
-            )}`;
-            const { url } = await this.uploadService.uploadFile(image, key);
-            this.logger.log(`Uploaded ${url}`);
-            uploadedUrls.push(url);
-            const newRoomImage = await prisma.roomImage.create({
-              data: {
-                room_id: room.id,
-                image_url: url,
-              },
-            });
-            room_image.push(newRoomImage);
+          if (images && images.length > 0) {
+            for (const image of images) {
+              const key = `room/${room.id}/${getKeyByFilename(
+                image.originalname,
+              )}`;
+              const { url } = await this.uploadService.uploadFile(image, key);
+              this.logger.log(`Uploaded ${url}`);
+              uploadedUrls.push(url);
+              const newRoomImage = await prisma.roomImage.create({
+                data: {
+                  room_id: room.id,
+                  image_url: url,
+                },
+              });
+              room_image.push(newRoomImage);
+            }
+
+            for (const image of oldRoom.room_image) {
+              await this.uploadService.deleteFileS3(image.image_url);
+              this.logger.log(`Deleted ${image.image_url}`);
+              await this.prisma.roomImage.delete({
+                where: { id: image.id },
+              });
+            }
           }
 
-          for (const image of oldRoom.room_image) {
-            await this.uploadService.deleteFileS3(image.image_url);
-            this.logger.log(`Deleted ${image.image_url}`);
-            await this.prisma.roomImage.delete({
-              where: { id: image.id },
-            });
-          }
           return {
             ...room,
             room_attribute,
