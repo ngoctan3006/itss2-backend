@@ -11,3 +11,6 @@ export const transformToInteger = ({ value }: TransformFnParams) =>
 
 export const transformToIntegerOrUndefined = ({ value }: TransformFnParams) =>
   typeof value === 'number' ? value : value ? parseInt(value) : undefined;
+
+export const transformToValueOrUndefined = ({ value }: TransformFnParams) =>
+  value ? value : undefined;
