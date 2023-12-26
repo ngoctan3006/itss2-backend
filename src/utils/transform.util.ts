@@ -8,3 +8,6 @@ export const transformToNumber = ({ value }: TransformFnParams) =>
 
 export const transformToInteger = ({ value }: TransformFnParams) =>
   typeof value === 'number' ? value : parseInt(value);
+
+export const transformToIntegerOrUndefined = ({ value }: TransformFnParams) =>
+  typeof value === 'number' ? value : value ? parseInt(value) : undefined;
