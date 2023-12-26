@@ -207,6 +207,7 @@ export class RoomController {
           message: 'Dung lượng file không được vượt quá 5MB',
         })
         .build({
+          fileIsRequired: false,
           exceptionFactory: (errors) => {
             throw new BadRequestException({
               success: false,
@@ -216,7 +217,8 @@ export class RoomController {
           },
         }),
     )
-    images: Express.Multer.File[],
+    @UploadedFiles()
+    images?: Express.Multer.File[],
   ): Promise<IResponse<Review>> {
     return {
       success: true,
