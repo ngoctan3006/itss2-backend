@@ -3,6 +3,9 @@ import { TransformFnParams } from 'class-transformer';
 export const transfromToBoolean = ({ value }: TransformFnParams) =>
   typeof value === 'boolean' ? value : value === 'true';
 
+export const transfromToBooleanOrUndefined = ({ value }: TransformFnParams) =>
+  typeof value === 'boolean' ? value : value ? value === 'true' : undefined;
+
 export const transformToNumber = ({ value }: TransformFnParams) =>
   Number(value);
 
